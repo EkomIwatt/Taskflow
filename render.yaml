@@ -1,0 +1,87 @@
+# Render Blueprint — the TaskFlow API + WebSocket hub.
+#
+# Deploy: Render dashboard → New → Blueprint → point at this repo. Render reads
+# this file and provisions the service; you fill in only the values marked
+# `sync: false` below, which are the ones it cannot know.
+#
+# The database is NOT declared here. TaskFlow uses Neon (see DEPLOY.md §1), so
+# DATABASE_URL is pasted in rather than provisioned by Render.
+
+services:
+  - type: web
+    name: taskflow-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    branch: main
+
+    # The Dockerfile's CMD binds $PORT and hardcodes `--workers 1`. Do not add a
+    # dockerCommand here to override it: the realtime hub is in-process state
+    # (board_id -> set of connections), so a second worker would serve half the
+    # clients from a registry that never sees the other half's broadcasts.
+    # Nothing crashes; realtime just silently half-works. See backend/README.md.
+
+    healthCheckPath: /api/health
+
+    envVars:
+      # --- Database (Neon) ---------------------------------------------------
+      # Paste the Neon connection string VERBATIM, including its
+      # ?sslmode=require&channel_binding=require. app/database.py normalises it:
+      # forces the +asyncpg driver, enables SSL, and strips the libpq-only args
+      # that asyncpg rejects. Hand-editing it causes more problems than it fixes.
+      - key: DATABASE_URL
+        sync: false
+
+      # --- Auth --------------------------------------------------------------
+      # Render generates this once and keeps it stable across deploys. Rotating
+      # it invalidates every outstanding access and refresh token, i.e. signs
+      # everyone out.
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: ACCESS_TOKEN_EXPIRE_SECONDS
+        value: "900"
+      - key: REFRESH_TOKEN_EXPIRE_SECONDS
+        value: "2592000"
+
+      # The UI (Vercel) and the API (Render) are different origins, so the
+      # refresh cookie is cross-site. Both of these are required: with either
+      # one wrong the browser silently declines to store or send the cookie, and
+      # the symptom is that users are signed out on every reload while login
+      # itself appears to work perfectly.
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: COOKIE_PATH
+        value: /api/auth
+
+      # --- CORS + the WebSocket origin allow-list ----------------------------
+      # Comma-separated, explicit; "*" is illegal with credentialed CORS.
+      # This same list is what the WebSocket handshake checks Origin against by
+      # hand — CORS middleware does not run on /ws, and browsers do not apply
+      # same-origin policy to WebSockets.
+      #
+      # Leave this until Vercel exists, then set it to the production domain AND
+      # the preview domains. A domain missing from this list fails at the
+      # handshake, which presents as a permanently dead socket rather than an
+      # error — it looks exactly like the API being down.
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+      # Browsers always send Origin; only non-browser clients omit it.
+      - key: WS_ALLOW_MISSING_ORIGIN
+        value: "false"
+
+      # --- Realtime (Contract 6) ---------------------------------------------
+      - key: WS_TICKET_TTL_SECONDS
+        value: "30"
+      - key: WS_PING_INTERVAL_SECONDS
+        value: "25"
+      - key: WS_SEND_TIMEOUT_SECONDS
+        value: "5"
+
+      - key: SQL_ECHO
+        value: "false"
