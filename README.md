@@ -68,10 +68,10 @@ the entire frontend was built before the two halves ever met.
 
 ```bash
 cd backend  && .venv/bin/python -m pytest      # 227 tests
-cd frontend && npm test                        # 200 tests
+cd frontend && npm test                        # 204 tests
 ```
 
-427 in total. The frontend suite includes `src/test/reconciliation.test.ts`, which replays
+431 in total. The frontend suite includes `src/test/reconciliation.test.ts`, which replays
 **frames captured from a live server** through the real client reducer — the check that neither
 half could run on its own.
 

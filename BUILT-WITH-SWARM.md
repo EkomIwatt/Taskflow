@@ -153,17 +153,66 @@ confirmed either fact alone.
 - **★ One move, one row — PROVEN.** A card dragged into the middle of a 20-card list changed
   exactly one `order_key`. This is the project's entire premise, verified against a real database
   rather than trusted from unit tests.
-- **★ Concurrent same-gap moves — PROVEN (server half).** Two clients moved different cards into
-  the same gap simultaneously: two distinct keys, no card lost or duplicated, both clients'
-  snapshots identical.
+- **★ Concurrent same-gap moves — PROVEN, headlessly and then in two real browsers.** Headlessly:
+  two clients moved different cards into the same gap simultaneously and got two distinct keys,
+  no card lost or duplicated, both snapshots identical. Then for real — two browsers, two
+  accounts, two people dragging into the gap between `Alpha[a0]` and `Beta[a1]` at the same
+  moment:
+
+  ```
+  To Do:  Alpha[a0]   Delta[a0V]   Epsilon[a0k]   Beta[a1]
+  ```
+
+  Both cards landed in the contested gap with distinct keys, each sorting strictly between the
+  neighbours; zero duplicate `(list, order_key)` pairs; every card still present exactly once.
+  **Both screens agreed.** Note that these keys differ from the headless run's `a0F`/`a0V` for the
+  same scenario — which is the point. The exact key, and which of the two cards ends up first,
+  depend on arrival order and are deliberately unspecified. What the contract requires is only
+  that both clients agree, and they did.
 - **★ Reconnect resync — PROVEN.** A real socket was killed, five edits were made while it was
   down, and it reconnected with a fresh ticket: `hello.seq=15` against a stale `local_seq=5`.
   Feeding that real `hello` to the real reducer trips exactly one resync.
 - **★ Ticket round-trip — PROVEN.** Real handshake succeeds; a replayed ticket closes 4001; a
   ticket for someone else's board is 404; a disallowed `Origin` is refused at the handshake.
 
-What remains for a human with two browsers is the *visual* half of convergence — that both screens
-agree on screen, and that a teammate's drag animates rather than teleports.
+Propagation was confirmed in the same session: a card dragged in one browser appeared in the
+other within a second, animated rather than teleported, and the activity feed printed the
+server's own sentence — "ekom moved Gamma from To Do to Doing" — verbatim.
+
+One sub-check remains genuinely unproven: **concurrent edits to the same card title by two
+different users.** It is the least risky of the three — a field-level last-write-wins overwrite
+with no ordering involved — but it was not exercised, and it is recorded here as untested rather
+than quietly folded into the passes above.
+
+### The bug the 427 tests did not catch
+
+The two-browser check was worth running, and here is the evidence: the first time anyone started
+the dev server against the real backend, **the app hung forever on "Restoring your session…".**
+
+The cause was entirely inside the frontend, in two individually-sensible guards that were mutually
+destructive. A `booted` ref allowed exactly one boot refresh, so React StrictMode's double-invoke
+could not rotate the refresh cookie twice. A `cancelled` flag in the effect's cleanup discarded
+late results. But StrictMode runs the first invocation's cleanup *before* the second invocation,
+and the ref makes that second invocation a no-op — so the flag cancelled the only request that was
+ever issued, and the boot state never resolved.
+
+What makes it worth writing down is why nothing had caught it. StrictMode's double-invoke is
+**dev-only**: the production build was unaffected, so `npm run build` was clean. No test rendered
+the provider inside `<StrictMode>`, so Vitest was clean. And Instance 2 could not run the dev
+server end-to-end against a real API, because it did not have one — that was the whole premise of
+the parallel build. The bug required a real server *and* a real browser *and* dev mode at once, a
+combination that first existed at merge.
+
+It was **not** a contract mismatch. All eight contracts still held; this was React lifecycle code
+that never touched the wire. But it is the clearest argument in this project for scoping the ★
+checks in advance rather than treating a green test suite as proof of a working system. 427
+passing tests, a clean typecheck and a clean production build all agreed the app was fine. Opening
+it in a browser disagreed.
+
+The fix removes the redundant flag — the ref alone already guarantees a single boot — and adds
+`frontend/src/auth/AuthContext.test.tsx`, which renders the provider inside `<StrictMode>`. All
+four of its tests fail against the previous code, which is the only thing that makes them worth
+having.
 
 ### Two gaps in the contracts themselves
 
@@ -193,10 +242,12 @@ is the behaviour the method depends on. Both did it.
 
 ## Result
 
-**427 tests green** — 227 backend, 200 frontend, `tsc --noEmit` clean.
+**431 tests green** — 227 backend, 204 frontend, `tsc --noEmit` clean. The production
+Docker image builds, and the ★ checks above were run against a live stack.
 
 Two halves of a real-time system, written simultaneously by two agents who never read each other's
-code, that agreed on first contact.
+code, that agreed on first contact — verified by two people dragging cards into the same gap at
+the same moment and landing on the same board.
 
 The reason is not that the agents were careful. It is that **the one algorithm that could have
 diverged was placed where it could only exist once.**
