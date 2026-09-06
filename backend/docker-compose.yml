@@ -1,0 +1,50 @@
+# Local stack: Postgres + the API. Run from backend/:
+#     docker compose up --build
+#
+# The api service waits for the database's healthcheck before starting, so the
+# first boot does not race the schema in db/init.sql.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: taskflow
+      POSTGRES_DB: taskflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - taskflow_pgdata:/var/lib/postgresql/data
+      # Runs once, on an empty data directory.
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskflow -d taskflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # The host is `db`, which normalise_database_url() recognises as local and
+      # therefore does not force SSL on.
+      DATABASE_URL: postgresql+asyncpg://taskflow:taskflow@db:5432/taskflow
+      JWT_SECRET: local-dev-secret-do-not-ship
+      ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: lax
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Live reload against the local tree.
+      - ./app:/app/app:ro
+    # One worker: the realtime hub is in-process (see the Dockerfile).
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --reload"
+
+volumes:
+  taskflow_pgdata:
