@@ -39,11 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
 
   useEffect(() => {
     // React 18+ StrictMode double-invokes effects in dev; booting twice would
-    // rotate the refresh cookie twice and invalidate the first token.
+    // rotate the refresh cookie twice and invalidate the first token. This ref
+    // guard therefore allows exactly ONE boot for the life of the page.
+    //
+    // There is deliberately NO `cancelled` flag alongside it. StrictMode runs
+    // the first invocation's cleanup *before* the second invocation, and the
+    // guard makes that second invocation a no-op -- so a cancellation flag
+    // would discard the result of the only request that was ever issued and
+    // leave the app stuck on "Restoring your session…" forever. AuthProvider
+    // mounts once at the root and never unmounts, so there is nothing to
+    // cancel; React 18 also no longer warns about setState after unmount.
     if (booted.current) return;
     booted.current = true;
-
-    let cancelled = false;
 
     // Boot with ONE refresh: 200 -> hydrate and render; 401 -> login screen.
     // The loading state matters -- never flash the login page at an already
@@ -53,20 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
         const session = await api.refresh();
         setAccessToken(session.access_token);
         const me = await api.me();
-        if (cancelled) return;
         setUser(me);
         setStatus("authenticated");
       } catch {
-        if (cancelled) return;
         setAccessToken(null);
         setUser(null);
         setStatus("anonymous");
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   useEffect(() => {
