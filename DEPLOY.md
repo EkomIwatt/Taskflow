@@ -1,0 +1,185 @@
+# Deploying TaskFlow — Vercel → Render → Neon
+
+The runbook for putting the merged stack online. Three services, in this order:
+**Neon** (Postgres) → **Render** (FastAPI + the WebSocket hub) → **Vercel** (the React UI).
+
+Deploy the database first because Render needs its URL, and Render before Vercel because the
+browser talks to the API origin **directly** for the WebSocket.
+
+Three things in this project are easy to get wrong and produce symptoms that look like
+application bugs. They each have a section below:
+
+1. Render must run **exactly one** uvicorn worker — the realtime hub is in-process.
+2. `VITE_WS_BASE` points at the **Render origin**, not through Vercel, which does not proxy
+   WebSockets.
+3. The WebSocket handshake checks `Origin` against its own allow-list. CORS middleware does
+   **not** protect that endpoint, and a missing Vercel domain fails as a dead socket, not an error.
+
+---
+
+## 1. Neon — Postgres
+
+1. Create a project and a database named `taskflow`.
+2. Copy the connection string. Neon hands out a **libpq** URL, something like:
+
+   ```
+   postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/taskflow?sslmode=require&channel_binding=require
+   ```
+
+3. **Paste it as-is.** `backend/app/database.py` normalises it: it forces the `+asyncpg` driver,
+   enables SSL, and strips the libpq-only query arguments (`sslmode`, `channel_binding`) that
+   asyncpg rejects with a `TypeError` on connect. Do not hand-edit the URL — the normaliser is
+   tested, and a half-edited URL is harder to debug than the original.
+
+Tables are created at startup from the SQLAlchemy metadata; `backend/db/init.sql` is the
+equivalent DDL if you would rather create them by hand.
+
+---
+
+## 2. Render — the API and the WebSocket hub
+
+Create a **Web Service** from this repo with root directory `backend/`.
+
+### Build
+
+The `backend/Dockerfile` is authoritative and already pins everything that matters:
+
+- **Python 3.12.8**, pinned in both `backend/.python-version` and the Dockerfile. Render otherwise
+  defaults to a Python with no prebuilt `pydantic-core` wheel, and the source build fails on a
+  read-only filesystem. This has cost a redeploy on every project in this ladder.
+- The start command hard-codes `--workers 1`. Leave it alone; see below.
+
+### Environment variables
+
+| Variable | Value | Notes |
+|---|---|---|
+| `DATABASE_URL` | the Neon string, verbatim | normalised in `database.py` |
+| `JWT_SECRET` | `python -c "import secrets; print(secrets.token_urlsafe(48))"` | never commit it |
+| `ACCESS_TOKEN_EXPIRE_SECONDS` | `900` | Contract 1 pins the advertised `expires_in` |
+| `REFRESH_TOKEN_EXPIRE_SECONDS` | `2592000` | 30 days |
+| `COOKIE_SECURE` | **`true`** | required: the cookie is cross-site in production |
+| `COOKIE_SAMESITE` | **`none`** | required: Vercel and Render are different origins |
+| `COOKIE_PATH` | `/api/auth` | Contract 1 scopes the refresh cookie to the auth routes |
+| `ALLOWED_ORIGINS` | the Vercel production domain **and** the preview domains, comma-separated | see §4 |
+| `WS_ALLOW_MISSING_ORIGIN` | `false` in production | browsers always send `Origin`; only non-browser clients omit it |
+| `WS_TICKET_TTL_SECONDS` | `30` | Contract 6 §1 |
+| `WS_PING_INTERVAL_SECONDS` | `25` | Contract 6 §6.1 |
+
+`COOKIE_SECURE=true` **and** `COOKIE_SAMESITE=none` are both required. With either one wrong the
+browser silently declines to store or send the refresh cookie, and the symptom is that users are
+logged out on every reload while login itself appears to work perfectly.
+
+### One uvicorn worker. Always.
+
+The realtime hub (`backend/app/realtime.py`) is an **in-process** registry: `board_id → set of
+connections`, plus the single-use ticket store and the per-board mutation locks. It is not backed
+by Redis, and a Redis fan-out is explicitly out of scope for this project.
+
+A second worker would serve half your clients from a registry the other half never writes to.
+Nothing would crash. Instead, roughly half of all edits would simply not appear on roughly half
+of the open boards — an intermittent "sometimes realtime doesn't work" report that is very
+expensive to diagnose after the fact.
+
+**Do not scale this service horizontally without replacing the hub with a shared backplane
+first.** That is the one architectural constraint the merge inherits.
+
+### Free-tier services sleep
+
+A Render free instance sleeps when idle, and a cold start drops every open socket and can take
+~30 seconds to answer. That is expected behaviour, not a bug. The client handles it: it shows
+"Reconnecting…", backs off `1s → 2s → 4s → 8s → 16s → 30s` with jitter (so a room full of clients
+does not stampede the waking process), then detects the `seq` gap on reconnect and refetches the
+snapshot exactly once.
+
+If you want the cold start gone, that is a paid instance type, not a code change.
+
+---
+
+## 3. Vercel — the UI
+
+Import the repo with root directory `frontend/`. `frontend/vercel.json` already sets the framework,
+build command, output directory, and the SPA rewrite.
+
+| Variable | Value |
+|---|---|
+| `VITE_API_BASE` | `https://<your-render-host>` |
+| `VITE_WS_BASE` | `wss://<your-render-host>` |
+| `VITE_USE_MOCKS` | `false` |
+| `VITE_USE_FAKE_SOCKET` | `false` |
+
+Both stub flags must be `false` in production. They exist so the frontend can run with no backend
+at all — that is how Instance 2 built the entire UI — and a `true` left in a Vercel environment
+ships an app that talks convincingly to itself.
+
+### `VITE_WS_BASE` does not go through Vercel
+
+**Vercel does not proxy WebSocket connections.** The browser opens the socket against the Render
+origin directly, which means the WebSocket origin is *not* the origin the app was served from.
+
+- `VITE_API_BASE` → `https://<render-host>` (HTTP, cross-origin, credentialed)
+- `VITE_WS_BASE` → `wss://<render-host>` (the socket, also direct)
+
+Note the scheme: `wss://`, not `ws://`, in production. A page served over HTTPS cannot open an
+insecure `ws://` socket; the browser blocks it as mixed content and the board sits on
+"Reconnecting…" forever while every HTTP request succeeds. That combination — edits work, live
+updates never arrive — almost always means `VITE_WS_BASE` is wrong.
+
+In development, leave `VITE_API_BASE` empty to use the Vite proxy (same-origin, so the refresh
+cookie just works) and set `VITE_WS_BASE=ws://localhost:8000`.
+
+---
+
+## 4. The WebSocket origin allow-list
+
+`ALLOWED_ORIGINS` on Render does double duty:
+
+1. it is the CORS allow-list for the HTTP API (credentialed, so `"*"` is illegal and is rejected), and
+2. it is the list the **WebSocket handshake checks `Origin` against by hand**.
+
+Browsers do not apply the same-origin policy to WebSockets and CORS middleware does not run on the
+`/ws` endpoint, so this check is written explicitly in `backend/app/routers/realtime.py`. It is the
+security control that stops any website from opening a socket against your API using a visitor's
+session.
+
+Include **every** origin that will serve the app:
+
+```
+ALLOWED_ORIGINS=https://taskflow.vercel.app,https://taskflow-git-main-you.vercel.app
+```
+
+Vercel generates a new preview domain per branch. A preview deployment whose domain is not on this
+list fails at the handshake — the connection is refused before it is accepted, so the browser
+reports a failed handshake rather than one of Contract 6's close codes, and the client falls back
+to its normal reconnect backoff. **A forgotten preview domain therefore looks exactly like a server
+that is down.** If a preview build shows a permanent "Reconnecting…", check this list first.
+
+---
+
+## 5. Post-deploy verification
+
+Run these against the live stack in order. The first four are the ★ checks from the coordination
+file; they are the boundaries no test suite could prove before the merge.
+
+1. **Ticket round-trip.** Sign in, open a board, confirm the presence row shows you. In DevTools →
+   Network → WS you should see one connection whose first frame is `hello`.
+2. **Two-browser convergence.** Two accounts, one board, two browsers. Drag a card in A: it moves
+   in B within a second, same final order. Then have both drag *different* cards into the *same
+   gap* as close to simultaneously as you can manage — confirm both screens agree afterwards and
+   no card is lost or duplicated. Then have both edit the same card title at once: last write
+   wins and both converge on it.
+3. **Reconnect resync.** With the board open in two browsers, set A offline in DevTools for ~30 s
+   while making five changes in B, then restore. A must show "Reconnecting…", reconnect, and end
+   up identical to B — with exactly one snapshot refetch, not one per missed event. Repeat by
+   letting the Render instance sleep instead; that is what a real cold start looks like.
+4. **Origin rejection.** From a page on a domain not in `ALLOWED_ORIGINS`, try to open a socket
+   against the API. The handshake must fail.
+5. **Cookie round-trip.** Sign in, hard-reload. You should stay signed in. If you land on the
+   login screen, `COOKIE_SECURE` / `COOKIE_SAMESITE` are wrong (§2).
+
+---
+
+## Rollback
+
+Render and Vercel both keep previous deployments and roll back from the dashboard. Nothing in this
+project runs destructive migrations — tables are created if absent and never dropped — so a
+rollback of the API is safe with respect to the database.
