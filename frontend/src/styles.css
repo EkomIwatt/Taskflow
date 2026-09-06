@@ -1,0 +1,1043 @@
+/* ==========================================================================
+   TaskFlow — an instrument panel for a live board.
+
+   The design brief is the project brief: this is a system where several people
+   act at once and the screen has to make that legible. So the chrome reads as
+   telemetry — mono numerics, a connection lamp, a presence row that is the
+   visible proof the socket works — while the board itself stays quiet enough
+   to work in all day.
+
+   Dark, warm-charcoal ground; one signal colour (chartreuse) reserved for
+   "live" and for primary actions, so a member's avatar_color (arbitrary hex
+   from the server) never competes with the UI's own accent.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* Ground — warm charcoal, not blue-black. */
+  --ink-900: #100f0d;
+  --ink-850: #16150f;
+  --ink-800: #1a1917;
+  --ink-750: #211f1c;
+  --ink-700: #2a2724;
+  --ink-600: #3a3631;
+
+  --line: #302c28;
+  --line-soft: #26231f;
+
+  --text: #f0ece4;
+  --text-dim: #a49d92;
+  --text-faint: #6f6862;
+
+  /* Signal — reserved for live state and primary action. */
+  --signal: #c6f24e;
+  --signal-dim: #93b83a;
+  --signal-glow: rgba(198, 242, 78, 0.18);
+
+  --warn: #ffb44d;
+  --danger: #ff6b5a;
+  --danger-soft: rgba(255, 107, 90, 0.14);
+
+  --radius: 10px;
+  --radius-sm: 7px;
+  --radius-lg: 16px;
+
+  --font-display: "Bricolage Grotesque", Georgia, serif;
+  --font-body: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px -8px rgba(0, 0, 0, 0.7);
+  --shadow-drag: 0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--signal-dim);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background-color: var(--ink-900);
+  /* A faint grain + a single warm bloom, so the ground has depth rather than
+     being a flat fill. */
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(198, 242, 78, 0.05), transparent 60%),
+    radial-gradient(700px 400px at 5% 100%, rgba(255, 180, 77, 0.035), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Primitives
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ink-750);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+.btn:hover:not(:disabled) {
+  background: var(--ink-700);
+  border-color: var(--ink-600);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #12140a;
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #d3fb63;
+  border-color: #d3fb63;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+  padding: 5px 8px;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--ink-750);
+  color: var(--text);
+  border-color: transparent;
+}
+
+.btn-danger {
+  color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ink-850);
+  color: var(--text);
+  transition: border-color 120ms ease;
+}
+.input::placeholder {
+  color: var(--text-faint);
+}
+.input:focus {
+  border-color: var(--signal-dim);
+  outline: none;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-dim);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Auth
+   -------------------------------------------------------------------------- */
+
+.auth-shell {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--ink-800), var(--ink-850));
+  box-shadow: var(--shadow-lift);
+  animation: rise 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  margin: 0;
+}
+.wordmark .dot {
+  color: var(--signal);
+}
+
+.auth-tagline {
+  color: var(--text-dim);
+  margin: 10px 0 28px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+}
+
+.form-error {
+  margin: 4px 0 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  border: 1px solid rgba(255, 107, 90, 0.3);
+  color: #ffb3a8;
+  font-size: 13px;
+}
+
+.auth-switch {
+  margin-top: 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--signal);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   App chrome
+   -------------------------------------------------------------------------- */
+
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(16, 15, 13, 0.82);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-spacer {
+  flex: 1;
+}
+
+.title-edit {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: var(--ink-850);
+  border: 1px solid var(--signal-dim);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+}
+
+/* Connection lamp — the telemetry readout. */
+.lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ink-850);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.lamp::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: none;
+}
+.lamp.is-open {
+  color: var(--signal);
+  border-color: rgba(198, 242, 78, 0.28);
+}
+.lamp.is-open::before {
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-glow);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+.lamp.is-reconnecting {
+  color: var(--warn);
+  border-color: rgba(255, 180, 77, 0.3);
+}
+.lamp.is-reconnecting::before {
+  background: var(--warn);
+  animation: blink 900ms steps(2, start) infinite;
+}
+.lamp.is-denied::before {
+  background: var(--danger);
+}
+
+/* Presence — the visible proof the realtime layer works. */
+.presence {
+  display: flex;
+  align-items: center;
+}
+.presence-stack {
+  display: flex;
+  align-items: center;
+}
+.presence-stack > * + * {
+  margin-left: -8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #10100c;
+  border: 2px solid var(--ink-900);
+  flex: none;
+  position: relative;
+  animation: pop 260ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.avatar.is-you {
+  border-color: var(--signal);
+}
+.avatar-overflow {
+  background: var(--ink-700);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.avatar-sm {
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+}
+
+/* --------------------------------------------------------------------------
+   Banner
+   -------------------------------------------------------------------------- */
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 20px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  border: 1px solid rgba(255, 107, 90, 0.3);
+  color: #ffc3ba;
+  animation: rise 220ms ease both;
+}
+.banner p {
+  margin: 0;
+  flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Board canvas
+   -------------------------------------------------------------------------- */
+
+.board-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.canvas {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-height: 0;
+}
+
+.column {
+  width: 292px;
+  flex: none;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--ink-800), var(--ink-850));
+  animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* Staggered reveal — the board assembles rather than appearing. */
+.column:nth-child(1) { animation-delay: 0ms; }
+.column:nth-child(2) { animation-delay: 55ms; }
+.column:nth-child(3) { animation-delay: 110ms; }
+.column:nth-child(4) { animation-delay: 165ms; }
+.column:nth-child(5) { animation-delay: 220ms; }
+.column:nth-child(n + 6) { animation-delay: 275ms; }
+
+.column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.column-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+  border-radius: 4px;
+}
+.column-title:hover {
+  background: var(--ink-750);
+}
+.column-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.column-cards {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow-y: auto;
+  min-height: 52px;
+  flex: 1;
+}
+.column-cards.is-over {
+  background: rgba(198, 242, 78, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(198, 242, 78, 0.22);
+  border-radius: var(--radius-sm);
+}
+
+.column-empty {
+  padding: 14px 10px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.column-foot {
+  padding: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Cards
+   -------------------------------------------------------------------------- */
+
+.card {
+  position: relative;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ink-750);
+  cursor: grab;
+  list-style: none;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+.card:hover {
+  border-color: var(--ink-600);
+  background: var(--ink-700);
+}
+.card:active {
+  cursor: grabbing;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  word-break: break-word;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--text-faint);
+}
+.card-meta:empty {
+  display: none;
+}
+
+.card-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+/* Dragging: the card lifts and tilts, so the drop target reads clearly. */
+.card.is-dragging {
+  opacity: 0.32;
+}
+.card-overlay {
+  cursor: grabbing;
+  box-shadow: var(--shadow-drag);
+  transform: rotate(2.5deg) scale(1.02);
+  background: var(--ink-700);
+}
+
+/* An unconfirmed optimistic row: present, but visibly not yet settled. */
+.card.is-pending {
+  border-style: dashed;
+  border-color: var(--signal-dim);
+}
+.card.is-pending::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(198, 242, 78, 0.09) 50%,
+    transparent 65%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.5s linear infinite;
+  pointer-events: none;
+}
+
+/* Someone ELSE moved this card — it should read as theirs, not teleport. */
+.card.is-remote {
+  animation: remote-pulse 1400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Activity rail
+   -------------------------------------------------------------------------- */
+
+.rail {
+  width: 296px;
+  flex: none;
+  border-left: 1px solid var(--line);
+  background: var(--ink-850);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.rail-head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.rail-head h2 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+.feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid transparent;
+}
+.feed-item + .feed-item {
+  border-top: 1px solid var(--line-soft);
+}
+.feed-item.is-new {
+  animation: feed-in 1600ms ease-out;
+}
+.feed-body {
+  min-width: 0;
+}
+.feed-summary {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.feed-time {
+  color: var(--text-faint);
+  margin-top: 3px;
+  display: block;
+}
+
+.empty-note {
+  padding: 24px 16px;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Card detail — a slide-over, so the board stays visible behind it
+   -------------------------------------------------------------------------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 6, 0.6);
+  z-index: 40;
+  animation: fade 180ms ease both;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(460px, 100vw);
+  background: var(--ink-800);
+  border-left: 1px solid var(--line);
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  animation: slide-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  box-shadow: -32px 0 64px -24px rgba(0, 0, 0, 0.8);
+}
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  flex: 1;
+  word-break: break-word;
+  cursor: text;
+  border-radius: 4px;
+}
+.panel-title:hover {
+  background: var(--ink-750);
+}
+.panel-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.panel-section + .panel-section {
+  margin-top: 26px;
+}
+.panel-section h3 {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 0 10px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ink-850);
+  line-height: 1.5;
+}
+.textarea:focus {
+  border-color: var(--signal-dim);
+  outline: none;
+}
+
+.comments {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.comment {
+  display: flex;
+  gap: 10px;
+}
+.comment-body {
+  min-width: 0;
+  flex: 1;
+}
+.comment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.comment-author {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.comment-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.panel-foot {
+  padding: 14px 18px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+/* --------------------------------------------------------------------------
+   Board list
+   -------------------------------------------------------------------------- */
+
+.page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.page-head h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  margin: 0;
+  flex: 1;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 14px;
+}
+
+.board-tile {
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--ink-800), var(--ink-850));
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.board-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--signal);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.board-tile:hover {
+  border-color: var(--ink-600);
+  transform: translateY(-2px);
+}
+.board-tile:hover::before {
+  transform: scaleY(1);
+}
+.board-tile h2 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  word-break: break-word;
+}
+.tile-stats {
+  display: flex;
+  gap: 12px;
+  color: var(--text-faint);
+}
+
+.empty-state {
+  padding: 56px 24px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--text-dim);
+}
+.empty-state h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+.empty-state p {
+  margin: 0 auto 20px;
+  max-width: 42ch;
+}
+
+.inline-form {
+  display: flex;
+  gap: 8px;
+}
+.inline-form .input {
+  flex: 1;
+}
+
+.centered-note {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  padding: 40px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Motion
+   -------------------------------------------------------------------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--signal-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(198, 242, 78, 0.07);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/* A teammate's change arrives as a pulse of the signal colour, then settles. */
+@keyframes remote-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(198, 242, 78, 0.5);
+    border-color: var(--signal);
+  }
+  40% {
+    box-shadow: 0 0 0 5px rgba(198, 242, 78, 0);
+    border-color: var(--signal-dim);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(198, 242, 78, 0);
+    border-color: var(--line);
+  }
+}
+
+@keyframes feed-in {
+  0% {
+    background: rgba(198, 242, 78, 0.12);
+    border-left-color: var(--signal);
+  }
+  100% {
+    background: transparent;
+    border-left-color: transparent;
+  }
+}
+
+/* Respect the user's motion preference — the flash is decoration, not data.
+   The connection lamp keeps its colour, which is what actually carries meaning. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

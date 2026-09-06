@@ -617,7 +617,22 @@ against the same allow-list. Browsers do not enforce same-origin policy on WebSo
 <!-- Instances write structured requests + *proposed* amendments here. Never edit the
      frozen block or another instance's section directly. Human resolves. -->
 
-(empty at start)
+### ESCALATION 2026-09-06T13:40:00Z — Instance 2
+**Type:** gap
+**Re:** Contract 3 (`<Card>.comment_count`) × Contract 5 (`comment.created`) × Contract 6 §3
+**Issue:** `<Card>` carries `comment_count`, but no broadcast event carries an updated value for
+it. `comment.created` delivers a `<Comment>`, and Contract 3 says a mutation emits *exactly one*
+state event, so posting a comment produces no `card.updated`. A client that stays connected
+therefore shows a `comment_count` that is stale until its next snapshot refetch.
+**Proposed resolution:** human to decide between (a) leave as-is and let clients derive the
+count locally from `comment.created` — what Instance 2 has implemented, self-healing on the next
+snapshot, no wire change; (b) amend Contract 3 so `<Comment>` includes the card's new
+`comment_count`; (c) amend Contract 6 §3 so a comment additionally emits `card.updated` — note
+this contradicts the one-mutation-one-event rule and is the weakest option.
+**Blocked work:** none — continuing other work. Implemented as (a) and marked `ASSUMED` in
+`frontend/README.md` and in `boardReducer.ts`. If the human ratifies (b), the client's local
+increment is deleted and the server value is applied; that is a small, contained change.
+**Status:** OPEN
 
 ---
 
@@ -760,7 +775,7 @@ Follow the `swarm-worker` runtime protocol for all shared-file, escalation, and 
 
 ---
 
-## INSTANCE 2 — Frontend Board & Realtime Client  ·  STATUS: PENDING
+## INSTANCE 2 — Frontend Board & Realtime Client  ·  STATUS: DONE
 
 **Owns:** `frontend/` in full — `src/` (pages, board UI, drag-and-drop, socket client, api client,
 mock + fake-socket layer, auth context, hooks, state reducer), `index.html`, `package.json`,
@@ -870,7 +885,90 @@ Follow the `swarm-worker` runtime protocol for all shared-file, escalation, and 
 
 **Work log:**
 
-(instance writes only here)
+### 2026-09-06 — Instance 2 — STATUS: DONE
+
+Built the whole frontend against the two stubs. Never saw Instance 1's code. Everything below
+lives under `frontend/`.
+
+**What was built**
+
+| Area | Where |
+|---|---|
+| Contracts 1-5, 8 as TypeScript | `src/types/contracts.ts` |
+| Contract 6 (envelope, event union, close codes, timings) | `src/realtime/protocol.ts` |
+| Socket client — ticket, heartbeat, dead-man timer, backoff, close codes | `src/realtime/socket.ts` |
+| **The scripted fake socket** | `src/realtime/fakeSocket.ts` |
+| **The mock HTTP layer** (Contracts 1-5, 8) | `src/api/mocks.ts` |
+| Transport: in-memory token, single-flight 401 refresh, `X-Client-Op-Id` | `src/api/http.ts` |
+| Typed endpoint surface | `src/api/endpoints.ts` |
+| **The board state machine** — seq rules + reconciliation | `src/board/boardReducer.ts` |
+| Contract 4's `(order_key, id)` sort + the pinning rule | `src/board/sortByOrder.ts` |
+| The join: reducer + socket + mutations | `src/board/useBoard.ts` |
+| Drag-and-drop canvas (`@dnd-kit`, pointer + keyboard) | `src/components/BoardCanvas.tsx` |
+| Presence row, connection lamp, activity feed, card panel | `src/components/` |
+| Auth / board list / board pages | `src/pages/` |
+
+**Verification:** `npm test` — **184 tests, 6 files, all green**. `tsc --noEmit` clean under
+`strict` + `noUncheckedIndexedAccess`. `npm run build` produces a working production bundle.
+
+**Decisions worth a merger's attention**
+
+- **`OrderKey` is a branded type.** A key cannot be constructed anywhere in the app except at the
+  parse boundary (`asOrderKey`) or as the optimistic placeholder. Contract 4's "the client never
+  generates a key" is enforced by the compiler, not by discipline. There is no midpoint function
+  in this codebase.
+- **Optimistic rows are pinned, not sorted.** A dragged card carries `PENDING_ORDER_KEY` and is
+  held at its dropped array index by `sortByOrderPinningPending`; everything else sorts around it.
+  Without this a moved card flings to one end and snaps back when the echo lands.
+- **Optimistic rows use a negative local `id` alongside `temp_id`.** `temp_id` (`"temp:<uuid>"`)
+  is the identity and is never sent to the server; reconciliation is by `client_op_id` alone. The
+  negative id exists only so the row has a React key and so the numeric `(order_key, id)`
+  tie-break stays total. Server ids are positive, so the spaces cannot collide.
+- **The 2xx response body is applied, not just used to retire the op.** Contract 7 §2 makes the
+  HTTP body and the broadcast equally authoritative. A bug found by the integration test: settling
+  on the response *without applying it* left the placeholder key in place whenever the socket was
+  down — which Contract 6 §6.6 explicitly allows. Both paths now apply by `id`, so applying both
+  is a no-op.
+- **Deletions are deliberately NOT optimistic.** Moves, creates and edits are. Removing a row and
+  restoring it reads worse than a moment's wait.
+- **`neighboursAt` skips unconfirmed rows.** An optimistic neighbour has no server id, so naming
+  it would name a card the server has never heard of; the search walks outward to the nearest
+  confirmed card.
+
+**Contract surfaces a merger should double-check against Instance 1's real output**
+
+1. **Envelope field names and nullability** — `seq: null` on the three ephemeral types, and
+   `client_op_id` echoed *verbatim*. `src/test/contract.test.ts` asserts all seven §2 fields on
+   every event type; point it at real captured frames and it either passes or names the field.
+2. **`card.moved` payload** is the five-field form (`id`, `list_id`, `from_list_id`, `order_key`,
+   `updated_at`) — **not** a full `<Card>`. The reducer merges those five onto the local row.
+3. **`list.created`** — the client reads `payload.cards` and tolerates it being absent, but the
+   contract shows a full list object with `cards: []`.
+4. **Close-code behaviour on 4001.** The client retries once with a fresh ticket, then runs the
+   auth-refresh flow, then falls back to backoff. If the real server sends 4001 for a reason
+   other than a stale ticket, that becomes a slow loop rather than a fast one — worth one look.
+5. **The snapshot's `seq`** must be the value the *next* event increments from. The client treats
+   `hello.seq != local_seq` as a resync trigger, so an off-by-one here shows up as a snapshot
+   refetch on every single connect.
+6. **404-vs-403 on the ticket endpoint.** A 404 from `POST /api/realtime/ticket` is treated as a
+   permanent denial (no retry). A 403 would be retried with backoff instead.
+
+**Remaining ASSUMED items**
+
+- **`comment_count` is derived client-side** on `comment.created` — no event carries an updated
+  count. Raised as an OPEN escalation above; implemented as the self-healing option. Low stakes.
+- **`display_name` fallback** (email local-part) is only exercised in the mock; the real server
+  owns it. Display-only.
+- The mock's key minting in `src/api/mocks.ts` is a **fixture generator, not Contract 4** — it is
+  confined to that file and nothing in `board/`, `realtime/` or the components imports it. It
+  exists so the stub has sortable data, and it is replaced wholesale at merge.
+
+**Not done, by design:** the three ★ merge-time checks (two-browser convergence, reconnect resync
+against a real process, the ticket round-trip). They need both halves running and are the
+Reconciler's, per the plan. Root `README.md`, `DEPLOY.md` and `BUILT-WITH-SWARM.md` untouched —
+they are merge-time artifacts.
+
+— Instance 2, 2026-09-06
 
 ---
 
