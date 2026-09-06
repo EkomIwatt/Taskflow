@@ -179,10 +179,21 @@ Propagation was confirmed in the same session: a card dragged in one browser app
 other within a second, animated rather than teleported, and the activity feed printed the
 server's own sentence — "ekom moved Gamma from To Do to Doing" — verbatim.
 
-One sub-check remains genuinely unproven: **concurrent edits to the same card title by two
-different users.** It is the least risky of the three — a field-level last-write-wins overwrite
-with no ordering involved — but it was not exercised, and it is recorded here as untested rather
-than quietly folded into the passes above.
+**Concurrent edits to the same card title — PROVEN.** Two users PATCHed the same field of the
+same card simultaneously while two real WebSocket clients watched. Both writes were accepted (no
+lock, no 409), both clients received both `card.updated` events at seq **38 and 40** in identical
+order, each echo carried its own originating `client_op_id`, and both converged on the same final
+title — the server's authoritative value. The losing write was overwritten wholesale, not merged:
+last-write-wins at the field level, exactly as Contract 7 §6 specifies, with no CRDT and no vector
+clocks.
+
+The seq pair being 38 and 40 rather than 38 and 39 is the "two seqs per mutation" property in the
+wild: each edit emits its `card.updated` plus an `activity.appended`.
+
+To be precise about the scope of that one: it was verified at the protocol level, through two real
+sockets against the live server, rather than by watching two browser windows. The step from
+"both clients converge on the same value" to "both screens show it" is the reducer, which the
+merge-time reconciliation test already drives with real captured frames.
 
 ### The bug the 427 tests did not catch
 
