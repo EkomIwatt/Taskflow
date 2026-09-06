@@ -1,0 +1,111 @@
+{
+ "results": {
+  "hello.seq matches the snapshot on first connect": {
+   "ok": true,
+   "detail": "5 == 5"
+  },
+  "star5 reconnect fetches a fresh ticket (single-use)": {
+   "ok": true,
+   "detail": ""
+  },
+  "star5 hello is the first frame after reconnect": {
+   "ok": true,
+   "detail": ""
+  },
+  "star5 hello.seq has advanced past local_seq -> client detects the gap": {
+   "ok": true,
+   "detail": "hello.seq=15 local_seq=5 (missed 10 events)"
+  },
+  "star5 the refetched snapshot contains every missed edit": {
+   "ok": true,
+   "detail": "['While-Offline-0', 'While-Offline-1', 'While-Offline-2', 'While-Offline-3', 'While-Offline-4']"
+  },
+  "star5 the refetched snapshot's seq matches hello.seq": {
+   "ok": true,
+   "detail": "snapshot=15 hello=15"
+  },
+  "star5 no server-side replay buffer was needed": {
+   "ok": true,
+   "detail": "snapshot-refetch is the only recovery path"
+  },
+  "star7 the move succeeds": {
+   "ok": true,
+   "detail": "200"
+  },
+  "star7 exactly ONE row's order_key changed (no renumbering)": {
+   "ok": true,
+   "detail": "changed=[31]"
+  },
+  "star7 the new key sorts strictly between its neighbours": {
+   "ok": true,
+   "detail": "a9 < a9V < aA"
+  },
+  "star7 the card landed in position 10": {
+   "ok": true,
+   "detail": "['C00', 'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C09', 'C19', 'C10', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16', 'C17', 'C18']"
+  }
+ },
+ "detail": {
+  "resync": {
+   "local_seq_before": 5,
+   "hello_seq_after": 15,
+   "hello2": {
+    "type": "hello",
+    "board_id": 8,
+    "seq": 15,
+    "actor_id": null,
+    "client_op_id": null,
+    "ts": "2026-09-06T22:28:58Z",
+    "payload": {
+     "board_id": 8,
+     "seq": 15,
+     "you": {
+      "id": 10,
+      "email": "rb_7146de61@example.com",
+      "display_name": "rb_7146de61",
+      "avatar_color": "#06B6D4",
+      "created_at": "2026-09-06T22:28:57Z"
+     },
+     "online": [
+      {
+       "id": 10,
+       "email": "rb_7146de61@example.com",
+       "display_name": "rb_7146de61",
+       "avatar_color": "#06B6D4",
+       "created_at": "2026-09-06T22:28:57Z"
+      }
+     ]
+    }
+   },
+   "snapshot_seq": 15
+  },
+  "one_row": {
+   "changed_ids": [
+    31
+   ],
+   "moved_key": "a9V",
+   "order": [
+    "C00",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C19",
+    "C10",
+    "C11",
+    "C12",
+    "C13",
+    "C14",
+    "C15",
+    "C16",
+    "C17",
+    "C18"
+   ]
+  }
+ }
+}

@@ -1,0 +1,1439 @@
+{
+ "frames": [
+  {
+   "type": "hello",
+   "board_id": 6,
+   "seq": 3,
+   "actor_id": null,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "board_id": 6,
+    "seq": 3,
+    "you": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "online": [
+     {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     }
+    ]
+   }
+  },
+  {
+   "type": "hello",
+   "board_id": 6,
+   "seq": 3,
+   "actor_id": null,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "board_id": 6,
+    "seq": 3,
+    "you": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "online": [
+     {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     }
+    ]
+   }
+  },
+  {
+   "type": "presence.joined",
+   "board_id": 6,
+   "seq": null,
+   "actor_id": null,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "user": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    }
+   }
+  },
+  {
+   "type": "list.created",
+   "board_id": 6,
+   "seq": 4,
+   "actor_id": 7,
+   "client_op_id": "op-list-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 2,
+    "board_id": 6,
+    "title": "Doing",
+    "order_key": "a0",
+    "cards": []
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 5,
+   "actor_id": 7,
+   "client_op_id": "op-list-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 22,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "list.created",
+    "summary": "alice_a1050edb added list Doing",
+    "subject": {
+     "list_id": 2,
+     "list_title": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 6,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 4,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Alpha",
+    "description": "",
+    "order_key": "a0",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 7,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 23,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Alpha to Doing",
+    "subject": {
+     "card_id": 4,
+     "card_title": "Alpha",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 8,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 5,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Beta",
+    "description": "",
+    "order_key": "a1",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 9,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 24,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Beta to Doing",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 10,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Gamma",
+    "description": "",
+    "order_key": "a2",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 11,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 25,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Gamma to Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 12,
+   "actor_id": 7,
+   "client_op_id": "op-move-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0V",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 13,
+   "actor_id": 7,
+   "client_op_id": "op-move-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 26,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "alice_a1050edb reordered Gamma in Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 14,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 5,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0F",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 15,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 27,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "alice_a1050edb reordered Beta in Doing",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 16,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0V",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 17,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 28,
+    "board_id": 6,
+    "actor": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "bob_a1050edb reordered Gamma in Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.deleted",
+   "board_id": 6,
+   "seq": 18,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 4,
+    "list_id": 2
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 19,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 29,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.deleted",
+    "summary": "alice_a1050edb deleted Alpha",
+    "subject": {
+     "card_id": 4,
+     "card_title": "Alpha"
+    },
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  },
+  {
+   "type": "comment.created",
+   "board_id": 6,
+   "seq": 20,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 2,
+    "card_id": 5,
+    "board_id": 6,
+    "author": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "body": "looks good",
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 21,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 30,
+    "board_id": 6,
+    "actor": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "comment.added",
+    "summary": "bob_a1050edb commented on Beta",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "comment_id": 2
+    },
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  }
+ ],
+ "b_frames": [
+  {
+   "type": "hello",
+   "board_id": 6,
+   "seq": 3,
+   "actor_id": null,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "board_id": 6,
+    "seq": 3,
+    "you": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "online": [
+     {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     }
+    ]
+   }
+  },
+  {
+   "type": "list.created",
+   "board_id": 6,
+   "seq": 4,
+   "actor_id": 7,
+   "client_op_id": "op-list-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 2,
+    "board_id": 6,
+    "title": "Doing",
+    "order_key": "a0",
+    "cards": []
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 5,
+   "actor_id": 7,
+   "client_op_id": "op-list-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 22,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "list.created",
+    "summary": "alice_a1050edb added list Doing",
+    "subject": {
+     "list_id": 2,
+     "list_title": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 6,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 4,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Alpha",
+    "description": "",
+    "order_key": "a0",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 7,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 23,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Alpha to Doing",
+    "subject": {
+     "card_id": 4,
+     "card_title": "Alpha",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 8,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 5,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Beta",
+    "description": "",
+    "order_key": "a1",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 9,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 24,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Beta to Doing",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.created",
+   "board_id": 6,
+   "seq": 10,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "board_id": 6,
+    "title": "Gamma",
+    "description": "",
+    "order_key": "a2",
+    "comment_count": 0,
+    "created_by": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "created_at": "2026-09-06T22:27:12Z",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 11,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 25,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.created",
+    "summary": "alice_a1050edb added Gamma to Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 12,
+   "actor_id": 7,
+   "client_op_id": "op-move-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0V",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 13,
+   "actor_id": 7,
+   "client_op_id": "op-move-1",
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 26,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "alice_a1050edb reordered Gamma in Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 14,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 5,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0F",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 15,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 27,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "alice_a1050edb reordered Beta in Doing",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.moved",
+   "board_id": 6,
+   "seq": 16,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 6,
+    "list_id": 2,
+    "from_list_id": 2,
+    "order_key": "a0V",
+    "updated_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 17,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:12Z",
+   "payload": {
+    "id": 28,
+    "board_id": 6,
+    "actor": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.moved",
+    "summary": "bob_a1050edb reordered Gamma in Doing",
+    "subject": {
+     "card_id": 6,
+     "card_title": "Gamma",
+     "from_list": "Doing",
+     "to_list": "Doing"
+    },
+    "created_at": "2026-09-06T22:27:12Z"
+   }
+  },
+  {
+   "type": "card.deleted",
+   "board_id": 6,
+   "seq": 18,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 4,
+    "list_id": 2
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 19,
+   "actor_id": 7,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 29,
+    "board_id": 6,
+    "actor": {
+     "id": 7,
+     "email": "alice_a1050edb@example.com",
+     "display_name": "alice_a1050edb",
+     "avatar_color": "#F97316",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "card.deleted",
+    "summary": "alice_a1050edb deleted Alpha",
+    "subject": {
+     "card_id": 4,
+     "card_title": "Alpha"
+    },
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  },
+  {
+   "type": "comment.created",
+   "board_id": 6,
+   "seq": 20,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 2,
+    "card_id": 5,
+    "board_id": 6,
+    "author": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "body": "looks good",
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  },
+  {
+   "type": "activity.appended",
+   "board_id": 6,
+   "seq": 21,
+   "actor_id": 8,
+   "client_op_id": null,
+   "ts": "2026-09-06T22:27:13Z",
+   "payload": {
+    "id": 30,
+    "board_id": 6,
+    "actor": {
+     "id": 8,
+     "email": "bob_a1050edb@example.com",
+     "display_name": "bob_a1050edb",
+     "avatar_color": "#6366F1",
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    "verb": "comment.added",
+    "summary": "bob_a1050edb commented on Beta",
+    "subject": {
+     "card_id": 5,
+     "card_title": "Beta",
+     "comment_id": 2
+    },
+    "created_at": "2026-09-06T22:27:13Z"
+   }
+  }
+ ],
+ "snapshots": {
+  "before_connect": {
+   "id": 6,
+   "title": "Launch",
+   "seq": 3,
+   "role": "owner",
+   "members": [
+    {
+     "user": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "role": "owner",
+     "added_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "user": {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "role": "member",
+     "added_at": "2026-09-06T22:27:12Z"
+    }
+   ],
+   "lists": [],
+   "activity": [
+    {
+     "id": 20,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "member.added",
+     "summary": "alice_a1050edb added bob_a1050edb to the board",
+     "subject": {
+      "user_id": 8,
+      "display_name": "bob_a1050edb"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 19,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "board.created",
+     "summary": "alice_a1050edb created Launch",
+     "subject": {
+      "board_id": 6,
+      "board_title": "Launch"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    }
+   ]
+  },
+  "final": {
+   "id": 6,
+   "title": "Launch",
+   "seq": 21,
+   "role": "owner",
+   "members": [
+    {
+     "user": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "role": "owner",
+     "added_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "user": {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "role": "member",
+     "added_at": "2026-09-06T22:27:12Z"
+    }
+   ],
+   "lists": [
+    {
+     "id": 2,
+     "title": "Doing",
+     "order_key": "a0",
+     "cards": [
+      {
+       "id": 5,
+       "list_id": 2,
+       "board_id": 6,
+       "title": "Beta",
+       "description": "",
+       "order_key": "a0F",
+       "comment_count": 1,
+       "created_by": {
+        "id": 7,
+        "email": "alice_a1050edb@example.com",
+        "display_name": "alice_a1050edb",
+        "avatar_color": "#F97316",
+        "created_at": "2026-09-06T22:27:12Z"
+       },
+       "created_at": "2026-09-06T22:27:12Z",
+       "updated_at": "2026-09-06T22:27:12Z"
+      },
+      {
+       "id": 6,
+       "list_id": 2,
+       "board_id": 6,
+       "title": "Gamma",
+       "description": "",
+       "order_key": "a0V",
+       "comment_count": 0,
+       "created_by": {
+        "id": 7,
+        "email": "alice_a1050edb@example.com",
+        "display_name": "alice_a1050edb",
+        "avatar_color": "#F97316",
+        "created_at": "2026-09-06T22:27:12Z"
+       },
+       "created_at": "2026-09-06T22:27:12Z",
+       "updated_at": "2026-09-06T22:27:12Z"
+      }
+     ]
+    }
+   ],
+   "activity": [
+    {
+     "id": 30,
+     "board_id": 6,
+     "actor": {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "comment.added",
+     "summary": "bob_a1050edb commented on Beta",
+     "subject": {
+      "card_id": 5,
+      "card_title": "Beta",
+      "comment_id": 2
+     },
+     "created_at": "2026-09-06T22:27:13Z"
+    },
+    {
+     "id": 29,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.deleted",
+     "summary": "alice_a1050edb deleted Alpha",
+     "subject": {
+      "card_id": 4,
+      "card_title": "Alpha"
+     },
+     "created_at": "2026-09-06T22:27:13Z"
+    },
+    {
+     "id": 28,
+     "board_id": 6,
+     "actor": {
+      "id": 8,
+      "email": "bob_a1050edb@example.com",
+      "display_name": "bob_a1050edb",
+      "avatar_color": "#6366F1",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.moved",
+     "summary": "bob_a1050edb reordered Gamma in Doing",
+     "subject": {
+      "card_id": 6,
+      "card_title": "Gamma",
+      "from_list": "Doing",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 27,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.moved",
+     "summary": "alice_a1050edb reordered Beta in Doing",
+     "subject": {
+      "card_id": 5,
+      "card_title": "Beta",
+      "from_list": "Doing",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 26,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.moved",
+     "summary": "alice_a1050edb reordered Gamma in Doing",
+     "subject": {
+      "card_id": 6,
+      "card_title": "Gamma",
+      "from_list": "Doing",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 25,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.created",
+     "summary": "alice_a1050edb added Gamma to Doing",
+     "subject": {
+      "card_id": 6,
+      "card_title": "Gamma",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 24,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.created",
+     "summary": "alice_a1050edb added Beta to Doing",
+     "subject": {
+      "card_id": 5,
+      "card_title": "Beta",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 23,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "card.created",
+     "summary": "alice_a1050edb added Alpha to Doing",
+     "subject": {
+      "card_id": 4,
+      "card_title": "Alpha",
+      "to_list": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 22,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "list.created",
+     "summary": "alice_a1050edb added list Doing",
+     "subject": {
+      "list_id": 2,
+      "list_title": "Doing"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 20,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "member.added",
+     "summary": "alice_a1050edb added bob_a1050edb to the board",
+     "subject": {
+      "user_id": 8,
+      "display_name": "bob_a1050edb"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    },
+    {
+     "id": 19,
+     "board_id": 6,
+     "actor": {
+      "id": 7,
+      "email": "alice_a1050edb@example.com",
+      "display_name": "alice_a1050edb",
+      "avatar_color": "#F97316",
+      "created_at": "2026-09-06T22:27:12Z"
+     },
+     "verb": "board.created",
+     "summary": "alice_a1050edb created Launch",
+     "subject": {
+      "board_id": 6,
+      "board_title": "Launch"
+     },
+     "created_at": "2026-09-06T22:27:12Z"
+    }
+   ]
+  }
+ },
+ "results": {
+  "C1 <User> shape": {
+   "ok": true,
+   "detail": "{\"id\": 7, \"email\": \"alice_a1050edb@example.com\", \"display_name\": \"alice_a1050edb\", \"avatar_color\": \"#F97316\", \"created_at\": \"2026-09-06T22:27:12Z\"}"
+  },
+  "C2 POST /boards 201": {
+   "ok": true,
+   "detail": "{\"id\": 6, \"title\": \"Launch\", \"role\": \"owner\", \"member_count\": 1, \"card_count\": 0, \"updated_at\": \"2026-09-06T22:27:12Z\"}"
+  },
+  "C2 add member 201": {
+   "ok": true,
+   "detail": "201"
+  },
+  "C2/C8 non-member gets 404 not 403": {
+   "ok": true,
+   "detail": "404"
+  },
+  "C2 snapshot carries seq": {
+   "ok": true,
+   "detail": "seq=3"
+  },
+  "C6s1 ticket 201 {ticket,expires_in}": {
+   "ok": true,
+   "detail": "{\"ticket\": \"wkgJF4sXzYmiVe4NfcNIcCqCqBP_o9bBu0Z-x-yJa10\", \"expires_in\": 30}"
+  },
+  "C6s1 ticket for someone elses board -> 404": {
+   "ok": true,
+   "detail": "404"
+  },
+  "C6s3 hello is first frame": {
+   "ok": true,
+   "detail": ""
+  },
+  "C6s6.4 hello.seq == snapshot seq (no false resync)": {
+   "ok": true,
+   "detail": "hello=3 snapshot=3"
+  },
+  "C6s3 hello.online lists both users": {
+   "ok": true,
+   "detail": "[{\"id\": 8, \"email\": \"bob_a1050edb@example.com\", \"display_name\": \"bob_a1050edb\", \"avatar_color\": \"#6366F1\", \"created_at\": \"2026-09-06T22:27:12Z\"}, {\"id\": 7, \"email\": \"alice_a1050edb@example.com\", \"display_name\": \"alice_a1050edb\", \"avatar_color\": \"#F97316\", \"created_at\": \"2026-09-06T22:27:12Z\"}]"
+  },
+  "C6s4 presence.joined has seq null": {
+   "ok": true,
+   "detail": "{\"type\": \"presence.joined\", \"board_id\": 6, \"seq\": null, \"actor_id\": null, \"client_op_id\": null, \"ts\": \"2026-09-06T22:27:12Z\", \"payload\": {\"user\": {\"id\": 8, \"email\": \"bob_a1050edb@example.com\", \"display_name\": \"bob_a1050edb\", \"avatar_color\": \"#6366F1\", \"created_at\": \"2026-09-06T22:27:12Z\"}}}"
+  },
+  "C6s5 replayed ticket -> 4001": {
+   "ok": true,
+   "detail": "code=4001"
+  },
+  "C6/C8 disallowed Origin rejected": {
+   "ok": true,
+   "detail": "InvalidStatus"
+  },
+  "C3 POST /lists carries board_id": {
+   "ok": true,
+   "detail": "{\"id\": 2, \"board_id\": 6, \"title\": \"Doing\", \"order_key\": \"a0\", \"cards\": []}"
+  },
+  "C7 client_op_id echoed verbatim": {
+   "ok": true,
+   "detail": "\"op-list-1\""
+  },
+  "C6s6.3 seq contiguous across the pair": {
+   "ok": true,
+   "detail": "4 -> 5"
+  },
+  "C3 <Card> shape": {
+   "ok": true,
+   "detail": "{\"id\": 4, \"list_id\": 2, \"board_id\": 6, \"title\": \"Alpha\", \"description\": \"\", \"order_key\": \"a0\", \"comment_count\": 0, \"created_by\": {\"id\": 7, \"email\": \"alice_a1050edb@example.com\", \"display_name\": \"alice_a1050edb\", \"avatar_color\": \"#F97316\", \"created_at\": \"2026-09-06T22:27:12Z\"}, \"created_at\": \"2026-09-06T22:27:12Z\", \"updated_at\": \"2026-09-06T22:27:12Z\"}"
+  },
+  "C4 keys sort into insertion order": {
+   "ok": true,
+   "detail": "['a0', 'a1', 'a2']"
+  },
+  "C6s3 card.moved is the 5-field form": {
+   "ok": true,
+   "detail": "{\"id\": 6, \"list_id\": 2, \"from_list_id\": 2, \"order_key\": \"a0V\", \"updated_at\": \"2026-09-06T22:27:12Z\"}"
+  },
+  "C4 moved key sorts strictly between neighbours": {
+   "ok": true,
+   "detail": "a0 < a0V < a1"
+  },
+  "C7 HTTP body and broadcast agree on order_key": {
+   "ok": true,
+   "detail": ""
+  },
+  "C6 broadcast-after-commit: snapshot already has the move": {
+   "ok": true,
+   "detail": "[4, 6, 5]"
+  },
+  "C2 snapshot lists omit board_id (nested form)": {
+   "ok": true,
+   "detail": "['id', 'title', 'order_key', 'cards']"
+  },
+  "C4 concurrent same-gap moves never collide": {
+   "ok": true,
+   "detail": "200s=2 409s=0 keys=['a0F', 'a0V']"
+  },
+  "star4 both clients converge on one order": {
+   "ok": true,
+   "detail": "[('a0', 4), ('a0F', 5), ('a0V', 6)]"
+  },
+  "star4 no card lost or duplicated": {
+   "ok": true,
+   "detail": "[('a0', 4), ('a0F', 5), ('a0V', 6)]"
+  },
+  "C3 stale neighbour -> 409 with the contract sentence": {
+   "ok": true,
+   "detail": "409 {\"error\":\"The board changed while you were dragging. Refreshing.\"}"
+  },
+  "C5 <Comment> shape": {
+   "ok": true,
+   "detail": "{\"id\": 2, \"card_id\": 5, \"board_id\": 6, \"author\": {\"id\": 8, \"email\": \"bob_a1050edb@example.com\", \"display_name\": \"bob_a1050edb\", \"avatar_color\": \"#6366F1\", \"created_at\": \"2026-09-06T22:27:12Z\"}, \"body\": \"looks good\", \"created_at\": \"2026-09-06T22:27:13Z\"}"
+  },
+  "C5 same-list move renders 'reordered' prose": {
+   "ok": true,
+   "detail": "alice_a1050edb reordered Gamma in Doing"
+  },
+  "C8 422 envelope, no detail key": {
+   "ok": true,
+   "detail": "{\"error\":\"Board title is required.\"}"
+  },
+  "C8 401 envelope": {
+   "ok": true,
+   "detail": "{\"error\":\"Not authenticated.\"}"
+  },
+  "C6s5 removed member socket closes 4003": {
+   "ok": true,
+   "detail": "code=4003"
+  }
+ }
+}
