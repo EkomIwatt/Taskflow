@@ -275,7 +275,7 @@ unusable.
            "title": "Fix login redirect",
            "description": "" | string,          // markdown-free plain text, may be ""
            "order_key": "a0V",                  // OPAQUE — see Contract 4
-           "comment_count": 3,
+           "comment_count": 3,      // see the comment_count amendment below
            "created_by": <User>,
            "created_at": "...", "updated_at": "..." }
 
@@ -321,6 +321,16 @@ DELETE /api/cards/{card_id}                      (bearer, member)
 Every mutating endpoint above accepts the optional header `X-Client-Op-Id` (Contract 7) and emits
 exactly one WebSocket event (Contract 6) plus exactly one activity entry (Contract 5).
 
+**AMENDED 2026-09-06 (human-ratified at merge, ESCALATION 2) — `comment_count` is client-derived.**
+No broadcast carries an updated `comment_count`. A connected client increments it locally on
+`comment.created` and re-reads the authoritative value from the next snapshot. Two consequences
+are accepted deliberately:
+  - `DELETE /api/comments/{id}` broadcasts **nothing at all** (Contract 6 enumerates no
+    `comment.deleted` event and Contract 5 no matching verb), so a deleted comment leaves
+    `comment_count` high on every client — including the deleter's own other tabs — until that
+    client's next snapshot refetch.
+  - The count is therefore **display-only and eventually consistent**. Nothing may branch on it.
+
 ---
 
 ### Contract 4: Fractional order keys
@@ -343,6 +353,11 @@ INVARIANTS the server guarantees:
   I1  Keys are unique per (list_id) for cards, and per (board_id) for lists.
   I2  For any two neighbours a < b the server can always mint a key strictly between them.
       No "ran out of room" failure is ever surfaced to the client.
+      ^ AMENDED 2026-09-06 (human-ratified at merge, ESCALATION 1): I2 is scoped to CARDS.
+        `list.rebalanced` renormalises the cards inside a list; there is no equivalent event
+        for a board's list ordering, so a LIST move that cannot mint a key between its two
+        named neighbours returns 409 and the client refetches the snapshot (Contract 7 §4/§7).
+        That is a supported, convergent path — not a contract violation.
   I3  A key is never mutated except by an explicit move or a rebalance (below).
   I4  Keys are NEVER exposed as a position, index, or number, and carry no meaning beyond
       their sort order. Two keys being "close" means nothing.
@@ -659,7 +674,11 @@ a completed socket reducer. Deferring to merge therefore leans strongly toward o
 409, narrow I2's wording to cards), which needs no code change on either side because Instance 2
 already rolls back and surfaces `body.error` on any non-2xx from a mutation. Option 2 remains
 available but now costs Instance 2 rework, and that trade is the Reconciler's to make.
-**Status:** OPEN — deferred to merge
+**Status:** RESOLVED 2026-09-06 (human, at merge) — **Option 1 accepted.** I2 is narrowed to
+cards; the 409 + snapshot-refetch path is ratified as correct behaviour for a list move that
+cannot be placed. No code change on either side: the Reconciler verified the path end-to-end
+against the live merged stack (server returns the exact Contract 3 sentence; the client already
+rolls back and refetches on any non-2xx). Contract 4's I2 carries the amendment inline.
 
 ### ESCALATION 2026-09-06T13:40:00Z — Instance 2
 **Type:** gap
@@ -676,7 +695,11 @@ this contradicts the one-mutation-one-event rule and is the weakest option.
 **Blocked work:** none — continuing other work. Implemented as (a) and marked `ASSUMED` in
 `frontend/README.md` and in `boardReducer.ts`. If the human ratifies (b), the client's local
 increment is deleted and the server value is applied; that is a small, contained change.
-**Status:** OPEN
+**Status:** RESOLVED 2026-09-06 (human, at merge) — **Option (a) accepted.** Client-side
+derivation is ratified. The Reconciler noted an asymmetry neither instance had stated: comment
+DELETION broadcasts nothing at all, so the count also goes stale downward. Accepted as a known,
+documented limitation rather than left silent — Contract 3 carries the amendment inline. The
+count is display-only and eventually consistent.
 
 ---
 
