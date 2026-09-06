@@ -617,11 +617,53 @@ against the same allow-list. Browsers do not enforce same-origin policy on WebSo
 <!-- Instances write structured requests + *proposed* amendments here. Never edit the
      frozen block or another instance's section directly. Human resolves. -->
 
-(empty at start)
+### ESCALATION 2026-09-06T00:00:00Z — Instance 1
+**Type:** gap
+**Re:** Contract 4 (REBALANCE) x Contract 3 (`PATCH /api/lists/{list_id}/move`) x Contract 6 §3
+**Issue:** Contract 4's invariant I2 promises the server "can always mint a key strictly between"
+two neighbours and that no "ran out of room" failure is ever surfaced to the client, naming
+`list.rebalanced` as the escape hatch that makes I2 true. But `list.rebalanced` is scoped to the
+**cards inside one list** — its payload is `{ "list_id", "cards": [...] }`. There is no enumerated
+event for renormalising the **board's lists**. So a *list* move has two states that I2 covers for
+cards but cannot cover for lists:
+  (a) the two named neighbour lists hold **equal** `order_key`s — legal per Contract 4's tie-break
+      note, but nothing sorts strictly between them; and
+  (b) the gap between them has been squeezed past the 64-character ceiling.
+Renormalising the board's list keys silently would leave every connected client holding stale keys
+with no broadcast to reconcile from, which is worse than the failure itself.
+**Interim behaviour (implemented, marked ASSUMED):** `PATCH /api/lists/{list_id}/move` returns
+**409** `{"error": "The board changed while you were dragging. Refreshing."}` in both states, so the
+client rolls back and refetches the snapshot — a path Contract 7 §4/§7 already define, and Contract
+8 already lists 409 as "conflict (stale drag...)". This is safe and convergent, but it is
+technically a "ran out of room" failure reaching the client, which I2's wording forbids.
+Practically it is very rare: boards have a handful of lists, and ~300 same-gap list moves still fit
+inside 64 characters. This is a correctness-of-wording issue far more than a likely runtime path.
+**Proposed resolution:** human to decide between —
+  1. **Accept the 409** and narrow I2's wording to cards. A one-line contract clarification with no
+     code change on either side: Instance 2 already rolls back and shows `body.error` on any
+     non-2xx from a mutation.
+  2. **Add a `board.rebalanced` event** to Contract 6 §3, shaped
+     `{ "lists": [ { "id": int, "order_key": string } ] }`, mirroring `list.rebalanced`. This
+     restores I2 for lists but requires Instance 2 to write a handler, so it is a real contract
+     change and must be ratified before either side implements it.
+I have deliberately NOT implemented option 2. Contract 6 §2 says clients ignore unknown types
+silently, but leaning on that to ship a *state* event would mean list order silently diverging on
+every connected client — the exact failure the frozen-contract discipline exists to prevent.
+**Blocked work:** none — continuing other work. The 409 fallback is implemented and tested
+(`needs_rebalance` in `app/queries.py`, `move_list` in `app/routers/lists.py`,
+`tests/test_lists_cards.py::test_move_list_next_to_a_deleted_neighbour_is_409`).
+**Deferred (2026-09-06, human):** left OPEN deliberately, for the Reconciler to reason about at
+merge rather than for either instance to act on now. One constraint the Reconciler should weigh:
+by merge time Instance 2 is finished, so **option 2 is no longer free** — it needs a new handler in
+a completed socket reducer. Deferring to merge therefore leans strongly toward option 1 (accept the
+409, narrow I2's wording to cards), which needs no code change on either side because Instance 2
+already rolls back and surfaces `body.error` on any non-2xx from a mutation. Option 2 remains
+available but now costs Instance 2 rework, and that trade is the Reconciler's to make.
+**Status:** OPEN — deferred to merge
 
 ---
 
-## INSTANCE 1 — Backend API, Realtime Hub & Ordering  ·  STATUS: PENDING
+## INSTANCE 1 — Backend API, Realtime Hub & Ordering  ·  STATUS: DONE
 
 **Owns:** `backend/` in full — `app/` (models, schemas, routers, auth, crud, ordering, realtime
 hub, activity, errors, config, database), `tests/`, `db/init.sql`, `requirements.txt`,
@@ -756,7 +798,73 @@ Follow the `swarm-worker` runtime protocol for all shared-file, escalation, and 
 
 **Work log:**
 
-(instance writes only here)
+**2026-09-06 — Instance 1 — DONE.**
+
+Built the whole backend in `backend/`. 227 tests pass (`cd backend && python -m pytest`).
+Verified end-to-end against a real uvicorn process and a real TCP WebSocket client, not just the
+ASGI harness: ticket -> handshake -> `hello` -> HTTP move -> echo with contiguous seqs; ticket
+replay refused 4001; disallowed `Origin` refused at the handshake.
+
+**What I built**
+- `app/ordering.py` — base-62 fractional keys, the only copy of the algorithm anywhere. 81
+  property tests: 5000 appends, 2000 prepends, 250 same-gap inserts (the case a naive midpoint
+  gets wrong around iteration 40), randomised insert/delete/move sequences, order and uniqueness
+  asserted after **every** step. Produces Contract 4's own example keys exactly — `a0`, `a1`,
+  `a2`, and `a0V` between `a0` and `a1` — which is how I confirmed I had the intended scheme.
+- `app/realtime.py` — the in-process hub: registry, single-use tickets, concurrent timeout-bounded
+  fan-out, heartbeat, explicit Origin check. `app/events.py` — seq allocation and
+  broadcast-after-commit. Mutations are serialised per board by an `asyncio.Lock` held across
+  allocate -> commit -> broadcast, so concurrent mutations can neither share a `seq` nor arrive
+  out of order.
+- `app/deps.py` — one membership funnel; every read and write resolves to a board and asserts
+  membership in the same query. 404 everywhere, never 403.
+- Routers for all of Contracts 1-6, `serializers.py` (every wire shape built once, so an HTTP body
+  and the matching WS payload cannot drift), `errors.py`, `queries.py`, `activity.py`.
+- `db/init.sql`, `Dockerfile` (Python 3.12.8, `--workers 1`), `docker-compose.yml`,
+  `.env.example`, `backend/README.md`.
+
+**Contract surfaces a merger should double-check**
+1. **`seq` advances by 2 per mutation, not 1.** One domain event *plus* one `activity.appended`,
+   with consecutive seqs. Contract 6 §6's client rule is purely `local_seq + 1` so nothing
+   depends on the ratio, but the numbers surprise people reading them.
+2. **Three deliberate exceptions to one-event-per-mutation**, all forced by the frozen
+   enumerations: `PATCH /lists/{id}/move` writes no activity entry (no `list.moved` verb);
+   `DELETE /comments/{id}` emits nothing at all (no `comment.deleted` event, no verb) — so other
+   clients' `comment_count` goes stale until their next snapshot; `POST /boards` writes an
+   activity entry but no state event (no `board.created` event, and nobody is connected yet).
+3. **`hello.seq` is the board's current seq**, not a freshly allocated one — it is the value
+   Contract 6 §6.4 has the client compare against `local_seq`.
+4. **Snapshot lists omit `board_id`** (Contract 2 spells that nested shape out without it) while
+   `POST /lists` and `list.created` include it (Contract 3 spells those out with it). Deliberate,
+   and it will look like an inconsistency at merge if not flagged.
+5. **`list.rebalanced` is server-originated**: `actor_id` null, no activity entry. It fires when
+   two neighbours hold equal keys or the gap exceeds 64 chars. Tested, not merely written.
+6. **Origin rejection closes 1008 before accept** (so the browser sees a failed handshake, HTTP
+   403, not a close code). Contract 6 §5 enumerates no origin code and the ★ check says "rejected
+   at the handshake", so refusing pre-accept is the reading I took.
+7. `X-Client-Op-Id` is echoed verbatim and trimmed to 128 chars; the sender is **not** skipped.
+
+**ASSUMED / open**
+- **ESCALATION filed (OPEN):** Contract 4's rebalance escape hatch covers the cards inside a list
+  but has no equivalent for a *board's lists*, so invariant I2 cannot be honoured for list moves.
+  Interim: `PATCH /lists/{id}/move` returns 409 and the client refetches. Two resolutions proposed;
+  I did not implement the one that would need a new event type, because shipping an unratified
+  state event would let list order diverge silently on every client.
+- `display_name` falls back to the email local-part; `avatar_color` is `id % 12` over a fixed
+  palette. Both display-only, as the conventions section allows.
+- **Single-process only.** The hub is in-process state, so Render must run `--workers 1`. Hard-coded
+  in the `Dockerfile`, documented in `backend/README.md`.
+- Refresh tokens carry a random `jti` so "rotated on every refresh" is literally true — without it
+  two refreshes in the same second produced byte-identical tokens.
+- Local Python is 3.9.13 while the container pins 3.12.8, so the source uses `Optional[X]` rather
+  than PEP 604 `X | None` (Pydantic evaluates annotations at runtime and 3.9 would fail).
+
+**Not provable here** — the three ★ merge checks stand as written. I can show the server serialises
+two moves into the same gap into two distinct keys with no card lost
+(`tests/test_seq_concurrency.py::test_concurrent_moves_into_the_same_gap_converge`), that `seq` is
+monotonic and contiguous under `asyncio.gather`, and that a move updates exactly one row on a
+20-card list. I cannot show two real browsers agreeing, a genuinely dropped connection recovering,
+or a browser's own handshake.
 
 ---
 
