@@ -652,7 +652,14 @@ every connected client — the exact failure the frozen-contract discipline exis
 **Blocked work:** none — continuing other work. The 409 fallback is implemented and tested
 (`needs_rebalance` in `app/queries.py`, `move_list` in `app/routers/lists.py`,
 `tests/test_lists_cards.py::test_move_list_next_to_a_deleted_neighbour_is_409`).
-**Status:** OPEN
+**Deferred (2026-09-06, human):** left OPEN deliberately, for the Reconciler to reason about at
+merge rather than for either instance to act on now. One constraint the Reconciler should weigh:
+by merge time Instance 2 is finished, so **option 2 is no longer free** — it needs a new handler in
+a completed socket reducer. Deferring to merge therefore leans strongly toward option 1 (accept the
+409, narrow I2's wording to cards), which needs no code change on either side because Instance 2
+already rolls back and surfaces `body.error` on any non-2xx from a mutation. Option 2 remains
+available but now costs Instance 2 rework, and that trade is the Reconciler's to make.
+**Status:** OPEN — deferred to merge
 
 ---
 
