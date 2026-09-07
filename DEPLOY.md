@@ -31,8 +31,20 @@ application bugs. They each have a section below:
    asyncpg rejects with a `TypeError` on connect. Do not hand-edit the URL — the normaliser is
    tested, and a half-edited URL is harder to debug than the original.
 
-Tables are created at startup from the SQLAlchemy metadata; `backend/db/init.sql` is the
-equivalent DDL if you would rather create them by hand.
+4. **Create the schema — this step is required and easy to miss.** In the Neon console open the
+   **SQL Editor**, paste the entire contents of `backend/db/init.sql`, and run it. It creates 7
+   tables and 13 indexes, and every statement is `IF NOT EXISTS`, so re-running it is harmless.
+
+   The API does **not** create the Postgres schema on startup. `app/main.py` runs
+   `Base.metadata.create_all` only when `DATABASE_URL` starts with `sqlite` — local runs and the
+   test suite — because on Postgres the schema is deliberately owned by `db/init.sql`. Skipping
+   this step produces a deployment that looks completely healthy and fails on first use:
+   `/api/health` returns 200 (it never touches the database), the service shows as live, and then
+   every real request returns `500 {"error": "Something went wrong on our end."}` because
+   `relation "users" does not exist`. The 500 is the error envelope doing its job and refusing to
+   leak internals, which is correct but tells you nothing — so check this first if you see one.
+
+   Re-run this file whenever `db/init.sql` changes. There is no migration tool in this project.
 
 ---
 
@@ -182,6 +194,9 @@ file; they are the boundaries no test suite could prove before the merge.
    against the API. The handshake must fail.
 5. **Cookie round-trip.** Sign in, hard-reload. You should stay signed in. If you land on the
    login screen, `COOKIE_SECURE` / `COOKIE_SAMESITE` are wrong (§2).
+6. **Schema smoke test.** Before anything else, `POST /api/auth/login` with credentials you know
+   are wrong. A **401** proves the database is reachable and the tables exist, because the lookup
+   query ran. A **500** means the schema was never applied — go back to §1 step 4.
 
 ---
 
